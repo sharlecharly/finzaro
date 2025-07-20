@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finzaro — Finanzas Personales</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Estilos originales */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #fff;
+      color: #222;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      position: relative;
+      min-height: 100vh;
+      padding-left: 160px; /* espacio para ads laterales */
+      padding-right: 160px;
+      padding-top: 120px;  /* espacio para ads arriba */
+      padding-bottom: 120px; /* espacio para ads abajo */
+      box-sizing: border-box;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    .logo {
+      font-weight: 900;
+      font-size: 2rem;
+      color: #000;
+      border: 2px solid #000;
+      padding: 0.3rem 1rem;
+      border-radius: 8px;
+      display: inline-block;
+      user-select: none;
+      letter-spacing: 3px;
+    }
+    .section {
+      margin-bottom: 2.5rem;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      user-select: none;
+    }
+    .categoria {
+      margin-bottom: 1.5rem;
+    }
+    .categoria h3 {
+      font-size: 1.25rem;
+      margin-top: 1rem;
+      user-select: none;
+    }
+    .item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+      transition: background-color 0.2s ease;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+    }
+    .item:hover {
+      background-color: #f5f5f5;
+    }
+    .item input[type="text"],
+    .item input[type="text"].monto {
+      padding: 8px 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.3s ease;
+      user-select: text;
+    }
+    .item input[type="text"]:focus,
+    .item input[type="text"].monto:focus {
+      outline: none;
+      border-color: #222;
+      background-color: #fff;
+    }
+    .item input[type="text"].monto {
+      width: 140px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-family: monospace, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    button {
+      padding: 8px 14px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      background-color: #000;
+      color: white;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    button:hover {
+      background-color: #444;
+    }
+    #grafico {
+      max-width: 600px;
+      max-height: 600px;
+      margin: 0 auto 2rem auto;
+      display: block;
+      user-select: none;
+    }
+    .totales {
+      font-weight: 700;
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 1.15rem;
+      user-select: none;
+    }
+    .output {
+      max-width: 720px;
+      margin: auto;
+      text-align: center;
+    }
+
+    /* Contenedores para anuncios */
+
+    /* Superior */
+    .ad-top {
+      position: fixed;
+      top: 0;
+      left: 160px;
+      right: 160px;
+      height: 90px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    /* Inferior */
+    .ad-bottom {
+      position: fixed;
+      bottom: 0;
+      left: 160px;
+      right: 160px;
+      height: 90px;
+      background: #f5f5f5;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    /* Izquierda */
+    .ad-left {
+      position: fixed;
+      top: 90px;
+      bottom: 90px;
+      left: 0;
+      width: 160px;
+      background: #f5f5f5;
+      border-right: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      writing-mode: vertical-rl;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #888;
+    }
+
+    /* Derecha */
+    .ad-right {
+      position: fixed;
+      top: 90px;
+      bottom: 90px;
+      right: 0;
+      width: 160px;
+      background: #f5f5f5;
+      border-left: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      writing-mode: vertical-rl;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <!-- Espacios para Ads -->
+  <div class="ad-top">
+    <!-- Aquí va tu código Google AdSense superior -->
+    <span>Publicidad Superior</span>
+  </div>
+  <div class="ad-bottom">
+    <!-- Aquí va tu código Google AdSense inferior -->
+    <span>Publicidad Inferior</span>
+  </div>
+  <div class="ad-left">
+    <!-- Aquí va tu código Google AdSense lateral izquierdo -->
+    <span>Publicidad Izquierda</span>
+  </div>
+  <div class="ad-right">
+    <!-- Aquí va tu código Google AdSense lateral derecho -->
+    <span>Publicidad Derecha</span>
+  </div>
+
+  <header>
+    <div class="logo">Finzaro</div>
+    <h1>💸 Organizá tus Finanzas</h1>
+  </header>
+
+  <section class="section" id="ingresos">
+    <h2>💰 Ingresos</h2>
+    <div id="ingresos-list"></div>
+    <button onclick="agregarIngreso()">+ Agregar ingreso</button>
+  </section>
+
+  <section class="section" id="gastos">
+    <h2>💳 Gastos</h2>
+
+    <div class="categoria">
+      <h3>📌 Gastos Fijos</h3>
+      <div id="fijos-list"></div>
+      <button onclick="agregarGasto('fijos')">+ Agregar gasto fijo</button>
+    </div>
+
+    <div class="categoria">
+      <h3>📈 Gastos Variables</h3>
+      <div id="variables-list"></div>
+      <button onclick="agregarGasto('variables')">+ Agregar gasto variable</button>
+    </div>
+
+    <div class="categoria">
+      <h3>📿 Gastos Únicos</h3>
+      <div id="unicos-list"></div>
+      <button onclick="agregarGasto('unicos')">+ Agregar gasto único</button>
+    </div>
+  </section>
+
+  <div class="output">
+    <button onclick="actualizarTotales()">✅ Calcular Totales</button>
+
+    <div class="totales">
+      <div id="total-ingresos">Total ingresos: $0</div>
+      <div id="total-gastos">Total gastos: $0</div>
+      <div id="sobrante">Sobrante: $0</div>
+      <div id="porcentajes" style="margin-top:0.5rem; font-weight:500; font-size:1rem;"></div>
+    </div>
+
+    <section class="section">
+      <h2>📊 Distribución de Gastos</h2>
+      <canvas id="grafico" width="600" height="600"></canvas>
+    </section>
+
+    <div class="totales">
+      <button onclick="generarPDF()">⬇️ Descargar PDF</button>
+    </div>
+  </div>
+
+  <script>
+    // Tu JS original sin cambios
+    const categorias = {
+      fijos: document.getElementById('fijos-list'),
+      variables: document.getElementById('variables-list'),
+      unicos: document.getElementById('unicos-list'),
+    };
+
+    const ingresosList = document.getElementById('ingresos-list');
+    let chart;
+
+    function formatNumero(valor) {
+      return valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function parseMonto(valor) {
+      if (!valor) return 0;
+      const limpio = valor.replace(/\./g, '').replace(',', '.');
+      return parseFloat(limpio) || 0;
+    }
+
+    function crearItem(concepto, tipo, lista) {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <input type="text" placeholder="Ej: ${concepto}" />
+        <input type="text" class="monto" placeholder="0,00" inputmode="decimal" pattern="[0-9.,]*" />
+        <button onclick="this.parentElement.remove()">❌</button>
+      `;
+
+      const montoInput = div.querySelector('.monto');
+      montoInput.addEventListener('blur', () => {
+        const valor = parseMonto(montoInput.value);
+        montoInput.value = formatNumero(valor);
+      });
+
+      lista.appendChild(div);
+    }
+
+    function agregarIngreso() {
+      crearItem('Sueldo', 'ingreso', ingresosList);
+    }
+
+    function agregarGasto(tipo) {
+      const ejemplos = {
+        fijos: 'Alquiler',
+        variables: 'Supermercado',
+        unicos: 'Médico'
+      };
+      crearItem(ejemplos[tipo], tipo, categorias[tipo]);
+    }
+
+    function actualizarTotales() {
+      const ingresos = Array.from(ingresosList.children).map(div => parseMonto(div.querySelector('.monto')?.value || '0'));
+      const totalIngresos = ingresos.reduce((a, b) => a + b, 0);
+
+      let totalGastos = 0;
+      const gastosPorCategoria = {};
+
+      Object.entries(categorias).forEach(([tipo, lista]) => {
+        gastosPorCategoria[tipo] = 0;
+        Array.from(lista.children).forEach(div => {
+          const val = parseMonto(div.querySelector('.monto')?.value || '0');
+          gastosPorCategoria[tipo] += val;
+          totalGastos += val;
+        });
+      });
+
+      const sobrante = totalIngresos - totalGastos;
+      const porcentajeGastos = totalIngresos ? (totalGastos / totalIngresos) * 100 : 0;
+      const porcentajeSobrante = totalIngresos ? (sobrante / totalIngresos) * 100 : 0;
+
+      document.getElementById('total-ingresos').textContent = `Total ingresos: $${formatNumero(totalIngresos)}`;
+      document.getElementById('total-gastos').textContent = `Total gastos: $${formatNumero(totalGastos)}`;
+      document.getElementById('sobrante').textContent = `Sobrante: $${formatNumero(sobrante)}`;
+
+      document.getElementById('porcentajes').innerHTML =
+        `Porcentajes: ` +
+        Object.entries(gastosPorCategoria).map(([cat, val]) => {
+          const p = totalIngresos ? (val / totalIngresos) * 100 : 0;
+          return `${cat}: ${p.toFixed(2)}%`;
+        }).join(' | ') +
+        ` | Sobrante: ${porcentajeSobrante.toFixed(2)}%`;
+
+      // Actualizar gráfico
+      const etiquetas = ['Fijos', 'Variables', 'Únicos', 'Sobrante'];
+      const valores = [
+        gastosPorCategoria.fijos,
+        gastosPorCategoria.variables,
+        gastosPorCategoria.unicos,
+        sobrante > 0 ? sobrante : 0
+      ];
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(document.getElementById('grafico').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: etiquetas,
+          datasets: [{
+            label: 'Distribución de Gastos',
+            data: valores,
+            backgroundColor: ['#007bff', '#28a745', '#ffc107', '#6c757d'],
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { enabled: true }
+          }
+        }
+      });
+    }
+
+    async function generarPDF() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const fecha = new Date();
+
+      function formatNumeroPDF(num) {
+        return num.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+
+      function parseMontoPDF(valor) {
+        if (!valor) return 0;
+        const limpio = valor.replace(/\./g, '').replace(',', '.');
+        return parseFloat(limpio) || 0;
+      }
+
+      pdf.setFontSize(22);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Finzaro', 40, 50);
+
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Resumen financiero al ${fecha.toLocaleDateString()}`, 40, 80);
+
+      let y = 110;
+
+      // Ingresos detallados
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Ingresos:', 40, y);
+      y += 18;
+      Array.from(ingresosList.children).forEach(div => {
+        const concepto = div.querySelector('input[type=text]').value || 'Ingreso';
+        const monto = div.querySelector('.monto').value || '0,00';
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`- ${concepto}:`, 60, y);
+        pdf.text(`$${monto}`, 280, y, { align: 'right' });
+        y += 16;
+      });
+      y += 10;
+
+      // Gastos detallados por categoría
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Gastos:', 40, y);
+      y += 18;
+      Object.entries(categorias).forEach(([tipo, lista]) => {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`- ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}:`, 50, y);
+        y += 16;
+        pdf.setFont('helvetica', 'normal');
+        Array.from(lista.children).forEach(div => {
+          const concepto = div.querySelector('input[type=text]').value || 'Gasto';
+          const monto = div.querySelector('.monto').value || '0,00';
+          pdf.text(`  • ${concepto}:`, 60, y);
+          pdf.text(`$${monto}`, 280, y, { align: 'right' });
+          y += 14;
+        });
+        y += 10;
+      });
+
+      // Totales y porcentajes
+      const ingresos = Array.from(ingresosList.children).map(div => parseMontoPDF(div.querySelector('.monto').value || '0'));
+      const totalIngresos = ingresos.reduce((a,b)=>a+b,0);
+
+      let totalGastos = 0;
+      Object.values(categorias).forEach(lista => {
+        Array.from(lista.children).forEach(div => {
+          totalGastos += parseMontoPDF(div.querySelector('.monto').value || '0');
+        });
+      });
+
+      const sobrante = totalIngresos - totalGastos;
+      const porcentajeGastos = totalIngresos ? ((totalGastos / totalIngresos) * 100).toFixed(2) : '0.00';
+      const porcentajeSobrante = totalIngresos ? ((sobrante / totalIngresos) * 100).toFixed(2) : '0.00';
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Totales:', 40, y);
+      y += 18;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Total Ingresos: $${formatNumeroPDF(totalIngresos)}`, 50, y);
+      y += 18;
+      pdf.text(`Total Gastos: $${formatNumeroPDF(totalGastos)} (${porcentajeGastos}%)`, 50, y);
+      y += 18;
+      pdf.text(`Sobrante: $${formatNumeroPDF(sobrante)} (${porcentajeSobrante}%)`, 50, y);
+
+      // Imagen del gráfico (escalado para calidad)
+      const canvas = document.getElementById('grafico');
+      const scaleFactor = 2;
+      const canvasScaled = document.createElement('canvas');
+      canvasScaled.width = canvas.width * scaleFactor;
+      canvasScaled.height = canvas.height * scaleFactor;
+      const ctxScaled = canvasScaled.getContext('2d');
+      ctxScaled.scale(scaleFactor, scaleFactor);
+      ctxScaled.drawImage(canvas, 0, 0);
+      const imgData = canvasScaled.toDataURL('image/png');
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const maxWidth = pdfWidth - 80;
+      const maxHeight = 300;
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgRatio = imgProps.width / imgProps.height;
+      let imgWidth = maxWidth;
+      let imgHeight = imgWidth / imgRatio;
+
+      if (imgHeight > maxHeight) {
+        imgHeight = maxHeight;
+        imgWidth = imgHeight * imgRatio;
+      }
+
+      const xPos = (pdfWidth - imgWidth) / 2;
+      const yPos = y + 30;
+      pdf.addImage(imgData, 'PNG', xPos, yPos, imgWidth, imgHeight);
+
+      pdf.save(`Finzaro_resumen_${fecha.toISOString().slice(0,10)}.pdf`);
+    }
+
+    // Inicializamos con un ingreso y gasto fijo para evitar vacíos
+    agregarIngreso();
+    agregarGasto('fijos');
+    actualizarTotales();
+  </script>
+</body>
+</html>
